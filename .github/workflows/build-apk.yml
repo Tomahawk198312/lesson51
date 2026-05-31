@@ -2,8 +2,6 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
@@ -16,12 +14,12 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install Flet CLI
-        run: pip install flet
+      - name: Install dependencies
+        run: pip install flet python-dotenv requests
 
       - name: Build APK
         run: |
-          flet build apk --module-name main --project-name "lesson51" --package-name "com.example.lesson51" --assets assets --android-min-sdk 21
+          flet build apk --module-name main
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
