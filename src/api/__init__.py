@@ -1,1 +1,1 @@
-from openrouter import OpenRouterClient
+from .openrouter import OpenRouterClient
