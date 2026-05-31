@@ -1,5 +1,6 @@
 import flet as ft
 
+
 class AppStyles:
     PAGE_SETTINGS = {
         "title": "AI Chat",
@@ -136,7 +137,12 @@ class AppStyles:
         "padding": 10,
         "bgcolor": ft.Colors.GREY_900,
         "border_radius": 8,
-        "border": ft.border.all(1, ft.Colors.GREY_700),
+        "border": ft.border.Border(
+            top=ft.border.BorderSide(1, ft.Colors.GREY_700),
+            bottom=ft.border.BorderSide(1, ft.Colors.GREY_700),
+            left=ft.border.BorderSide(1, ft.Colors.GREY_700),
+            right=ft.border.BorderSide(1, ft.Colors.GREY_700),
+        ),
     }
 
     @staticmethod
