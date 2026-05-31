@@ -50,6 +50,8 @@ class ChatApp:
 
     def main(self, page: ft.Page):
         load_config(page)
+        page.add(ft.Text("Приложение запущено", color=ft.Colors.WHITE))
+        page.update()
 
         # Настройка страницы
         for key, value in AppStyles.PAGE_SETTINGS.items():
@@ -70,7 +72,8 @@ class ChatApp:
         try:
             self.api_client = OpenRouterClient()
         except ValueError as e:
-            show_error_snack(page, str(e))
+            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED, size=20))
+            page.update()
             return
 
         # Обновление баланса
