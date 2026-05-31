@@ -1,11 +1,11 @@
 import flet as ft
-from api.openrouter import OpenRouterClient
-from ui.styles import AppStyles
-from ui.components import MessageBubble, ModelSelector
-from utils.cache import ChatCache
-from utils.logger import AppLogger
-from utils.analytics import Analytics
-from utils.monitor import PerformanceMonitor
+from .api.openrouter import OpenRouterClient
+from .ui.styles import AppStyles
+from .ui.components import MessageBubble, ModelSelector
+from .utils.cache import ChatCache
+from .utils.logger import AppLogger
+from .utils.analytics import Analytics
+from .utils.monitor import PerformanceMonitor
 import asyncio
 import time
 import json

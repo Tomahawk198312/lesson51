@@ -1,5 +1,5 @@
 import flet as ft
-from styles import AppStyles
+from .styles import AppStyles
 
 class MessageBubble(ft.Container):
     def __init__(self, message: str, is_user: bool):
