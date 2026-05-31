@@ -17,9 +17,14 @@ jobs:
       - name: Install dependencies
         run: pip install flet python-dotenv requests
 
-      - name: Build APK
+      - name: Accept Android licenses
         run: |
-          echo "" | flet build apk --module-name main
+          # Путь к Flutter, установленному Flet CLI
+          FLUTTER_PATH=$HOME/flutter/3.41.7/bin/flutter
+          yes | $FLUTTER_PATH doctor --android-licenses
+
+      - name: Build APK
+        run: echo "" | flet build apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
