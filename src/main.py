@@ -15,7 +15,10 @@ from dotenv import load_dotenv
 
 
 def load_config(page: ft.Page):
-    """Загружает .env из assets приложения или локальной папки."""
+    # Если ключ уже передан через переменные окружения (--env при сборке),
+    # то загрузка .env не требуется
+    if os.getenv("OPENROUTER_API_KEY"):
+        return
     try:
         assets_dir = page.get_assets_dir()
         if assets_dir:
@@ -25,7 +28,7 @@ def load_config(page: ft.Page):
                 return
     except Exception:
         pass
-
+    load_dotenv()
 
 def show_error_snack(page, message):
     snack = ft.SnackBar(
