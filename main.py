@@ -1,3 +1,4 @@
+import src.config
 import flet as ft
 from src.main import ChatApp
 

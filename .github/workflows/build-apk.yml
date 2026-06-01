@@ -17,11 +17,11 @@ jobs:
       - name: Install dependencies
         run: pip install flet python-dotenv requests
 
-      - name: Ensure assets directory and create .env
+      - name: Inject API key into src/config.py
         run: |
-          mkdir -p assets
-          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > assets/.env
-          echo "BASE_URL=https://openrouter.ai/api/v1" >> assets/.env
+          echo "import os" > src/config.py
+          echo "os.environ['OPENROUTER_API_KEY'] = '${{ secrets.OPENROUTER_API_KEY }}'" >> src/config.py
+          echo "os.environ['BASE_URL'] = 'https://openrouter.ai/api/v1'" >> src/config.py
 
       - name: Build APK
         run: yes | flet build apk

@@ -1,5 +1,4 @@
 [build]
 project_name = "lesson51"
 package_name = "com.example.lesson51"
-assets_dir = "assets"
 android_min_sdk = 21

@@ -13,33 +13,6 @@ from datetime import datetime
 import os
 
 
-def load_config(page: ft.Page):
-    """Загружает переменные окружения из .env вручную."""
-    # Пытаемся найти .env в assets (работает в APK)
-    try:
-        assets_dir = page.get_assets_dir()
-        if assets_dir:
-            env_path = os.path.join(assets_dir, '.env')
-            if os.path.exists(env_path):
-                with open(env_path, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
-                            key, value = line.split('=', 1)
-                            os.environ[key] = value.strip()
-                return
-    except Exception:
-        pass
-
-    # Запасной вариант: файл в текущей папке
-    if os.path.exists('.env'):
-        with open('.env', 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    os.environ[key] = value.strip()
-
 def show_error_snack(page, message):
     snack = ft.SnackBar(
         content=ft.Text(message, color=ft.Colors.RED_500, weight=ft.FontWeight.BOLD),
@@ -62,7 +35,6 @@ class ChatApp:
         self.exports_dir = None
 
     def main(self, page: ft.Page):
-        load_config(page)
 
         # Диагностика
         page.add(ft.Text("Приложение запущено", color=ft.Colors.WHITE))
@@ -70,7 +42,6 @@ class ChatApp:
 
         # 1. Загрузка конфигурации
         try:
-            load_config(page)
             api_key = os.getenv("OPENROUTER_API_KEY")
             if not api_key:
                 raise ValueError("API ключ не найден в .env")
