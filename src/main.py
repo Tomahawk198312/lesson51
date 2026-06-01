@@ -50,7 +50,66 @@ class ChatApp:
 
     def main(self, page: ft.Page):
         load_config(page)
+
+        # Диагностика
         page.add(ft.Text("Приложение запущено", color=ft.Colors.WHITE))
+        page.update()
+
+        # 1. Загрузка конфигурации
+        try:
+            load_config(page)
+            api_key = os.getenv("OPENROUTER_API_KEY")
+            if not api_key:
+                raise ValueError("API ключ не найден в .env")
+            page.controls.append(ft.Text(f"Ключ загружен: {api_key[:8]}...", color=ft.Colors.GREEN))
+        except Exception as e:
+            page.controls.append(ft.Text(f"Ошибка загрузки конфигурации: {e}", color=ft.Colors.RED))
+            page.update()
+            return
+
+        # 2. Создание директорий и кэша
+        try:
+            app_dir = page.get_application_directory()
+            if not app_dir:
+                app_dir = os.getcwd()
+            cache_db_path = os.path.join(app_dir, "chat_cache.db")
+            self.cache = ChatCache(db_path=cache_db_path)
+            self.exports_dir = os.path.join(app_dir, "exports")
+            os.makedirs(self.exports_dir, exist_ok=True)
+            page.controls.append(ft.Text("Кэш создан", color=ft.Colors.GREEN))
+        except Exception as e:
+            page.controls.append(ft.Text(f"Ошибка создания кэша: {e}", color=ft.Colors.RED))
+            page.update()
+            return
+
+        # 3. Инициализация API клиента
+        try:
+            self.api_client = OpenRouterClient()
+            page.controls.append(ft.Text("API клиент создан", color=ft.Colors.GREEN))
+        except Exception as e:
+            page.controls.append(ft.Text(f"Ошибка API клиента: {e}", color=ft.Colors.RED))
+            page.update()
+            return
+
+        # 4. Получение списка моделей
+        try:
+            models = self.api_client.available_models
+            if not models:
+                raise ValueError("Список моделей пуст")
+            page.controls.append(ft.Text(f"Загружено {len(models)} моделей", color=ft.Colors.GREEN))
+        except Exception as e:
+            page.controls.append(ft.Text(f"Ошибка получения моделей: {e}", color=ft.Colors.RED))
+            page.update()
+            return
+
+        # 5. Обновление баланса
+        try:
+            self.update_balance()
+            page.controls.append(ft.Text(f"Баланс: {self.balance_text.value}", color=ft.Colors.GREEN))
+        except Exception as e:
+            page.controls.append(ft.Text(f"Ошибка получения баланса: {e}", color=ft.Colors.RED))
+            # не фатально, продолжаем
+
         page.update()
 
         # Настройка страницы
