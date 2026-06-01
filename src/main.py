@@ -15,8 +15,8 @@ import os
 
 def load_config(page: ft.Page):
     """Загружает переменные окружения из .env вручную."""
+    # Пытаемся найти .env в assets (работает в APK)
     try:
-        # Пытаемся найти .env в assets (работает в APK)
         assets_dir = page.get_assets_dir()
         if assets_dir:
             env_path = os.path.join(assets_dir, '.env')
@@ -31,7 +31,7 @@ def load_config(page: ft.Page):
     except Exception:
         pass
 
-    # Запасной вариант: локальный запуск (файл в текущей папке)
+    # Запасной вариант: файл в текущей папке
     if os.path.exists('.env'):
         with open('.env', 'r') as f:
             for line in f:
@@ -39,7 +39,6 @@ def load_config(page: ft.Page):
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
                     os.environ[key] = value.strip()
-
 
 def show_error_snack(page, message):
     snack = ft.SnackBar(
