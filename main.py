@@ -1,6 +1,5 @@
 import flet as ft
 from src.main import ChatApp
-import asyncio
 
 async def main(page: ft.Page):
     app = ChatApp()
