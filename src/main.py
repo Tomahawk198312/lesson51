@@ -11,24 +11,35 @@ import time
 import json
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 
 
 def load_config(page: ft.Page):
-    # Если ключ уже передан через переменные окружения (--env при сборке),
-    # то загрузка .env не требуется
-    if os.getenv("OPENROUTER_API_KEY"):
-        return
+    """Загружает переменные окружения из .env вручную."""
     try:
+        # Пытаемся найти .env в assets (работает в APK)
         assets_dir = page.get_assets_dir()
         if assets_dir:
             env_path = os.path.join(assets_dir, '.env')
             if os.path.exists(env_path):
-                load_dotenv(env_path)
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            key, value = line.split('=', 1)
+                            os.environ[key] = value.strip()
                 return
     except Exception:
         pass
-    load_dotenv()
+
+    # Запасной вариант: локальный запуск (файл в текущей папке)
+    if os.path.exists('.env'):
+        with open('.env', 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key] = value.strip()
+
 
 def show_error_snack(page, message):
     snack = ft.SnackBar(

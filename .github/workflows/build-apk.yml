@@ -17,11 +17,13 @@ jobs:
       - name: Install dependencies
         run: pip install flet python-dotenv requests
 
-      - name: Build APK
+      - name: Create .env file
         run: |
-          yes | flet build apk \
-            --env OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }} \
-            --env BASE_URL=https://openrouter.ai/api/v1
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > assets/.env
+          echo "BASE_URL=https://openrouter.ai/api/v1" >> assets/.env
+
+      - name: Build APK
+        run: yes | flet build apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
