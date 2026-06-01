@@ -53,7 +53,7 @@ class ChatApp:
 
         # 2. Создание директорий и кэша
         try:
-            app_dir = page.get_application_directory()
+            app_dir = os.path.dirname(os.path.abspath(__file__))
             if not app_dir:
                 app_dir = os.getcwd()
             cache_db_path = os.path.join(app_dir, "chat_cache.db")
@@ -102,7 +102,7 @@ class ChatApp:
         AppStyles.set_window_size(page)
 
         # Инициализация хранилища
-        app_dir = page.get_application_directory()
+        app_dir = os.path.dirname(os.path.abspath(__file__))
         if not app_dir:
             app_dir = os.getcwd()  # fallback для локального запуска
         cache_db_path = os.path.join(app_dir, "chat_cache.db")
@@ -267,7 +267,7 @@ class ChatApp:
         e.page.update()
 
     async def confirm_clear_history(self, e):
-        async def clear_confirmed(ev):
+        async def clear_confirmed(_):
             self.cache.clear_history()
             self.analytics.clear_data()
             self.chat_history.controls.clear()
