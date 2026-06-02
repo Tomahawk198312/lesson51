@@ -36,107 +36,82 @@ class ChatApp:
 
     def main(self, page: ft.Page):
         self.page = page
-        # --- Диагностический вывод ---
-        status = ft.Text("Инициализация...", color=ft.Colors.WHITE)
-        page.add(status)
+        # Попытка сразу что-то показать
+        page.title = "Загрузка..."
+        try:
+            page.add(ft.Text("Инициализация...", color=ft.Colors.WHITE))
+        except:
+            page.title = "Ошибка: page.add не работает"
         page.update()
 
-        # --- Проверка API ключа ---
+        # Проверка ключа
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
-            status.value = "Ошибка: API ключ не найден"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = "Нет ключа"
             return
-        status.value = "Ключ OK"
-        page.update()
 
-        # --- Настройка стилей ---
-        try:
-            AppStyles.set_window_size(page)
-        except Exception:
-            pass  # на Android нет окна
-        for key, value in AppStyles.PAGE_SETTINGS.items():
-            setattr(page, key, value)
-        status.value = "Стили применены"
+        # Пропускаем set_window_size
+        # Просто применяем фон и тему
+        page.bgcolor = ft.Colors.GREY_900
+        page.theme_mode = ft.ThemeMode.DARK
+        page.padding = 20
         page.update()
+        page.title = "Стили ОК"
 
-        # --- Инициализация кэша ---
+        # Инициализация кэша (с ловлей ошибок)
         try:
             app_dir = os.path.dirname(os.path.abspath(__file__))
-            if not app_dir:
-                app_dir = os.getcwd()
             cache_db_path = os.path.join(app_dir, "chat_cache.db")
             self.exports_dir = os.path.join(app_dir, "exports")
             os.makedirs(self.exports_dir, exist_ok=True)
             self.cache = ChatCache(db_path=cache_db_path)
             self.analytics = Analytics(self.cache)
-            status.value = "Кэш создан"
         except Exception as e:
-            status.value = f"Ошибка кэша: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"Ошибка кэша: {e}"
             return
-        page.update()
 
-        # --- API клиент ---
+        page.title = "Кэш ОК"
+        # API
         try:
             self.api_client = OpenRouterClient()
-            status.value = "API клиент создан"
         except Exception as e:
-            status.value = f"Ошибка API: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"API ошибка: {e}"
             return
-        page.update()
+        page.title = "API ОК"
 
-        # --- Модели ---
+        # Модели
         try:
             models = self.api_client.available_models
-            if not models:
-                raise ValueError("Нет моделей")
-            status.value = f"Моделей: {len(models)}"
         except Exception as e:
-            status.value = f"Ошибка моделей: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"Модели ошибка: {e}"
             return
-        page.update()
+        page.title = f"Модели: {len(models)}"
 
-        # --- Баланс ---
+        # Баланс
         try:
             self.update_balance()
-        except Exception:
+        except:
             pass
-        status.value = "Строю интерфейс..."
-        page.update()
+        page.title = "Баланс ОК"
 
-        # --- Построение UI (каждый шаг с отловом ошибок) ---
+        # Построение UI (обернём каждый шаг)
         try:
             self.model_dropdown = ModelSelector(models)
         except Exception as e:
-            status.value = f"Ошибка ModelSelector: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"ModelSelector: {e}"
             return
-
         try:
             self.chat_history = ft.ListView(**AppStyles.CHAT_HISTORY)
-            self.load_chat_history()
         except Exception as e:
-            status.value = f"Ошибка чата: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"ListView: {e}"
             return
-
         try:
             self.message_input = ft.TextField(**AppStyles.MESSAGE_INPUT)
         except Exception as e:
-            status.value = f"Ошибка поля ввода: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"TextField: {e}"
             return
 
+        # Кнопки
         try:
             send_button = ft.ElevatedButton(
                 on_click=self.send_message_click,
@@ -155,38 +130,36 @@ class ChatApp:
                 **AppStyles.ANALYTICS_BUTTON
             )
         except Exception as e:
-            status.value = f"Ошибка кнопок: {e}"
-            status.color = ft.Colors.RED
-            page.update()
+            page.title = f"Кнопки: {e}"
             return
 
+        # Сборка макета
         try:
             input_row = ft.Row([self.message_input, send_button], **AppStyles.INPUT_ROW)
             control_buttons = ft.Row([save_button, analytics_button, clear_button], **AppStyles.CONTROL_BUTTONS_ROW)
             controls_column = ft.Column([input_row, control_buttons], **AppStyles.CONTROLS_COLUMN)
-
             balance_container = ft.Container(content=self.balance_text, **AppStyles.BALANCE_CONTAINER)
             model_selection = ft.Column([
                 self.model_dropdown.search_field,
                 self.model_dropdown,
                 balance_container
             ], **AppStyles.MODEL_SELECTION_COLUMN)
-
             main_column = ft.Column([
                 model_selection,
                 self.chat_history,
                 controls_column
             ], **AppStyles.MAIN_COLUMN)
-
             page.controls.clear()
             page.add(main_column)
             self.monitor.get_metrics()
             self.logger.info("App started")
-            page.update()
         except Exception as e:
-            status.value = f"Ошибка сборки UI: {e}"
-            status.color = ft.Colors.RED
+            page.title = f"Сборка UI: {e}"
             page.update()
+            return
+
+        page.update()
+        page.title = "Готово"
 
     def _close_dialog(self, dialog):
         dialog.open = False
