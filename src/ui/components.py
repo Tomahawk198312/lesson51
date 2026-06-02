@@ -7,11 +7,12 @@ class MessageBubble(ft.Container):
         self.padding = 10
         self.border_radius = 10
         self.bgcolor = ft.Colors.BLUE_700 if is_user else ft.Colors.GREY_700
-        self.alignment = ft.alignment.center_right if is_user else ft.alignment.center_left
-        self.margin = ft.margin.only(
+        self.alignment = ft.Alignment(1.0, 0.0) if is_user else ft.Alignment(-1.0, 0.0)
+        self.margin = ft.Margin(
             left=50 if is_user else 0,
             right=0 if is_user else 50,
-            top=5, bottom=5
+            top=5,
+            bottom=5
         )
         self.content = ft.Column([
             ft.Text(

@@ -35,132 +35,162 @@ class ChatApp:
         self.exports_dir = None
 
     def main(self, page: ft.Page):
-        # --- Минимальная диагностика ---
-        status = ft.Text("Начало инициализации...", color=ft.Colors.WHITE)
+        self.page = page
+        # --- Диагностический вывод ---
+        status = ft.Text("Инициализация...", color=ft.Colors.WHITE)
         page.add(status)
         page.update()
 
-        # Проверка API ключа
+        # --- Проверка API ключа ---
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
-            show_error_snack(page, "API ключ не найден")
-            page.add(ft.Text("Ошибка: API ключ не найден", color=ft.Colors.RED))
+            status.value = "Ошибка: API ключ не найден"
+            status.color = ft.Colors.RED
             page.update()
             return
-
-        status.value = "Ключ загружен, настройка стилей..."
+        status.value = "Ключ OK"
         page.update()
 
-        # Настройка страницы (безопасно для Android)
+        # --- Настройка стилей ---
         try:
             AppStyles.set_window_size(page)
         except Exception:
-            pass  # На Android нет window
-
+            pass  # на Android нет окна
         for key, value in AppStyles.PAGE_SETTINGS.items():
             setattr(page, key, value)
-
-        status.value = "Стили применены, создание кэша..."
+        status.value = "Стили применены"
         page.update()
 
-        # Определение рабочей директории и инициализация кэша
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        if not app_dir:
-            app_dir = os.getcwd()
-        cache_db_path = os.path.join(app_dir, "chat_cache.db")
-        self.exports_dir = os.path.join(app_dir, "exports")
-        os.makedirs(self.exports_dir, exist_ok=True)
-
+        # --- Инициализация кэша ---
         try:
+            app_dir = os.path.dirname(os.path.abspath(__file__))
+            if not app_dir:
+                app_dir = os.getcwd()
+            cache_db_path = os.path.join(app_dir, "chat_cache.db")
+            self.exports_dir = os.path.join(app_dir, "exports")
+            os.makedirs(self.exports_dir, exist_ok=True)
             self.cache = ChatCache(db_path=cache_db_path)
             self.analytics = Analytics(self.cache)
+            status.value = "Кэш создан"
         except Exception as e:
-            show_error_snack(page, f"Ошибка создания кэша: {e}")
-            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED))
+            status.value = f"Ошибка кэша: {e}"
+            status.color = ft.Colors.RED
             page.update()
             return
-
-        status.value = "Кэш создан, инициализация API..."
         page.update()
 
-        # Инициализация API клиента
+        # --- API клиент ---
         try:
             self.api_client = OpenRouterClient()
-        except ValueError as e:
-            show_error_snack(page, str(e))
-            page.add(ft.Text(f"Ошибка API: {e}", color=ft.Colors.RED))
+            status.value = "API клиент создан"
+        except Exception as e:
+            status.value = f"Ошибка API: {e}"
+            status.color = ft.Colors.RED
             page.update()
             return
-
-        status.value = "API клиент создан, загрузка моделей..."
         page.update()
 
-        # Получение списка моделей
+        # --- Модели ---
         try:
             models = self.api_client.available_models
             if not models:
-                raise ValueError("Нет доступных моделей")
+                raise ValueError("Нет моделей")
+            status.value = f"Моделей: {len(models)}"
         except Exception as e:
-            show_error_snack(page, f"Ошибка получения моделей: {e}")
-            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED))
+            status.value = f"Ошибка моделей: {e}"
+            status.color = ft.Colors.RED
             page.update()
             return
-
-        status.value = f"Загружено {len(models)} моделей, построение интерфейса..."
         page.update()
 
-        # Обновление баланса
+        # --- Баланс ---
         try:
             self.update_balance()
         except Exception:
             pass
-
-        # Построение UI
-        self.model_dropdown = ModelSelector(models)
-        self.chat_history = ft.ListView(**AppStyles.CHAT_HISTORY)
-        self.load_chat_history()
-
-        self.message_input = ft.TextField(**AppStyles.MESSAGE_INPUT)
-
-        send_button = ft.ElevatedButton(
-            on_click=self.send_message_click,
-            **AppStyles.SEND_BUTTON
-        )
-        save_button = ft.ElevatedButton(
-            on_click=self.save_dialog,
-            **AppStyles.SAVE_BUTTON
-        )
-        clear_button = ft.ElevatedButton(
-            on_click=self.confirm_clear_history,
-            **AppStyles.CLEAR_BUTTON
-        )
-        analytics_button = ft.ElevatedButton(
-            on_click=self.show_analytics,
-            **AppStyles.ANALYTICS_BUTTON
-        )
-
-        input_row = ft.Row([self.message_input, send_button], **AppStyles.INPUT_ROW)
-        control_buttons = ft.Row([save_button, analytics_button, clear_button], **AppStyles.CONTROL_BUTTONS_ROW)
-        controls_column = ft.Column([input_row, control_buttons], **AppStyles.CONTROLS_COLUMN)
-
-        balance_container = ft.Container(content=self.balance_text, **AppStyles.BALANCE_CONTAINER)
-        model_selection = ft.Column([
-            self.model_dropdown.search_field,
-            self.model_dropdown,
-            balance_container
-        ], **AppStyles.MODEL_SELECTION_COLUMN)
-
-        main_column = ft.Column([
-            model_selection,
-            self.chat_history,
-            controls_column
-        ], **AppStyles.MAIN_COLUMN)
-
-        page.controls.clear()
-        page.add(main_column)
-        self.monitor.get_metrics()
-        self.logger.info("App started")
+        status.value = "Строю интерфейс..."
         page.update()
+
+        # --- Построение UI (каждый шаг с отловом ошибок) ---
+        try:
+            self.model_dropdown = ModelSelector(models)
+        except Exception as e:
+            status.value = f"Ошибка ModelSelector: {e}"
+            status.color = ft.Colors.RED
+            page.update()
+            return
+
+        try:
+            self.chat_history = ft.ListView(**AppStyles.CHAT_HISTORY)
+            self.load_chat_history()
+        except Exception as e:
+            status.value = f"Ошибка чата: {e}"
+            status.color = ft.Colors.RED
+            page.update()
+            return
+
+        try:
+            self.message_input = ft.TextField(**AppStyles.MESSAGE_INPUT)
+        except Exception as e:
+            status.value = f"Ошибка поля ввода: {e}"
+            status.color = ft.Colors.RED
+            page.update()
+            return
+
+        try:
+            send_button = ft.ElevatedButton(
+                on_click=self.send_message_click,
+                **AppStyles.SEND_BUTTON
+            )
+            save_button = ft.ElevatedButton(
+                on_click=self.save_dialog,
+                **AppStyles.SAVE_BUTTON
+            )
+            clear_button = ft.ElevatedButton(
+                on_click=self.confirm_clear_history,
+                **AppStyles.CLEAR_BUTTON
+            )
+            analytics_button = ft.ElevatedButton(
+                on_click=self.show_analytics,
+                **AppStyles.ANALYTICS_BUTTON
+            )
+        except Exception as e:
+            status.value = f"Ошибка кнопок: {e}"
+            status.color = ft.Colors.RED
+            page.update()
+            return
+
+        try:
+            input_row = ft.Row([self.message_input, send_button], **AppStyles.INPUT_ROW)
+            control_buttons = ft.Row([save_button, analytics_button, clear_button], **AppStyles.CONTROL_BUTTONS_ROW)
+            controls_column = ft.Column([input_row, control_buttons], **AppStyles.CONTROLS_COLUMN)
+
+            balance_container = ft.Container(content=self.balance_text, **AppStyles.BALANCE_CONTAINER)
+            model_selection = ft.Column([
+                self.model_dropdown.search_field,
+                self.model_dropdown,
+                balance_container
+            ], **AppStyles.MODEL_SELECTION_COLUMN)
+
+            main_column = ft.Column([
+                model_selection,
+                self.chat_history,
+                controls_column
+            ], **AppStyles.MAIN_COLUMN)
+
+            page.controls.clear()
+            page.add(main_column)
+            self.monitor.get_metrics()
+            self.logger.info("App started")
+            page.update()
+        except Exception as e:
+            status.value = f"Ошибка сборки UI: {e}"
+            status.color = ft.Colors.RED
+            page.update()
+
+    def _close_dialog(self, dialog):
+        dialog.open = False
+        self.page.update()
 
     def load_chat_history(self):
         try:
@@ -187,17 +217,17 @@ class ChatApp:
             return
         try:
             self.message_input.border_color = ft.Colors.BLUE_400
-            e.page.update()
+            self.page.update()
 
             start_time = time.time()
             user_message = self.message_input.value
             self.message_input.value = ""
-            e.page.update()
+            self.page.update()
 
             self.chat_history.controls.append(MessageBubble(user_message, is_user=True))
             loading = ft.ProgressRing()
             self.chat_history.controls.append(loading)
-            e.page.update()
+            self.page.update()
 
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
@@ -230,13 +260,13 @@ class ChatApp:
                 tokens_used=tokens_used
             )
             self.monitor.log_metrics(self.logger)
-            e.page.update()
+            self.page.update()
 
         except Exception as e:
             self.logger.error(f"Send error: {e}")
-            show_error_snack(e.page, str(e))
+            show_error_snack(self.page, str(e))
             self.message_input.border_color = ft.Colors.RED_500
-            e.page.update()
+            self.page.update()
 
     async def show_analytics(self, e):
         stats = self.analytics.get_statistics()
@@ -248,33 +278,33 @@ class ChatApp:
                 ft.Text(f"Токенов/сообщение: {stats['tokens_per_message']:.2f}"),
                 ft.Text(f"Сообщений/мин: {stats['messages_per_minute']:.2f}")
             ]),
-            actions=[ft.TextButton("Закрыть", on_click=lambda e: self.close_dialog(dialog, e.page))],
+            actions=[ft.TextButton("Закрыть", on_click=lambda _: self._close_dialog(dialog))],
         )
         e.page.overlay.append(dialog)
         dialog.open = True
-        e.page.update()
+        self.page.update()
 
     async def confirm_clear_history(self, e):
         async def clear_confirmed(_):
             self.cache.clear_history()
             self.analytics.clear_data()
             self.chat_history.controls.clear()
-            self.close_dialog(dialog, e.page)
-            e.page.update()
+            dialog.open = False
+            self.page.update()
 
         dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Подтверждение"),
             content=ft.Text("Удалить всю историю? Это необратимо!"),
             actions=[
-                ft.TextButton("Отмена", on_click=lambda ev: self.close_dialog(dialog, e.page)),
+                ft.TextButton("Отмена", on_click=lambda _: self._close_dialog(dialog)),
                 ft.TextButton("Очистить", on_click=clear_confirmed),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        e.page.overlay.append(dialog)
+        self.page.overlay.append(dialog)
         dialog.open = True
-        e.page.update()
+        self.page.update()
 
     async def save_dialog(self, e):
         try:
@@ -290,14 +320,14 @@ class ChatApp:
                     ft.Text("Файл:"),
                     ft.Text(filepath, selectable=True, weight=ft.FontWeight.BOLD),
                 ]),
-                actions=[ft.TextButton("OK", on_click=lambda ev: self.close_dialog(dialog, e.page))],
+                actions=[ft.TextButton("OK", on_click=lambda _: self._close_dialog(dialog))],
             )
             e.page.overlay.append(dialog)
             dialog.open = True
-            e.page.update()
+            self.page.update()
         except Exception as e:
             self.logger.error(f"Save error: {e}")
-            show_error_snack(e.page, str(e))
+            show_error_snack(self.page, str(e))
 
     def close_dialog(self, dialog, page):
         dialog.open = False
