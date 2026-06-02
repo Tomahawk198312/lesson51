@@ -35,6 +35,11 @@ class ChatApp:
         self.exports_dir = None
 
     def main(self, page: ft.Page):
+        # --- Минимальная диагностика ---
+        status = ft.Text("Начало инициализации...", color=ft.Colors.WHITE)
+        page.add(status)
+        page.update()
+
         # Проверка API ключа
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
@@ -43,10 +48,20 @@ class ChatApp:
             page.update()
             return
 
-        # Настройка страницы
+        status.value = "Ключ загружен, настройка стилей..."
+        page.update()
+
+        # Настройка страницы (безопасно для Android)
+        try:
+            AppStyles.set_window_size(page)
+        except Exception:
+            pass  # На Android нет window
+
         for key, value in AppStyles.PAGE_SETTINGS.items():
             setattr(page, key, value)
-        AppStyles.set_window_size(page)
+
+        status.value = "Стили применены, создание кэша..."
+        page.update()
 
         # Определение рабочей директории и инициализация кэша
         app_dir = os.path.dirname(os.path.abspath(__file__))
@@ -65,6 +80,9 @@ class ChatApp:
             page.update()
             return
 
+        status.value = "Кэш создан, инициализация API..."
+        page.update()
+
         # Инициализация API клиента
         try:
             self.api_client = OpenRouterClient()
@@ -73,6 +91,9 @@ class ChatApp:
             page.add(ft.Text(f"Ошибка API: {e}", color=ft.Colors.RED))
             page.update()
             return
+
+        status.value = "API клиент создан, загрузка моделей..."
+        page.update()
 
         # Получение списка моделей
         try:
@@ -85,7 +106,10 @@ class ChatApp:
             page.update()
             return
 
-        # Обновление баланса (не критично при ошибке)
+        status.value = f"Загружено {len(models)} моделей, построение интерфейса..."
+        page.update()
+
+        # Обновление баланса
         try:
             self.update_balance()
         except Exception:
@@ -132,6 +156,7 @@ class ChatApp:
             controls_column
         ], **AppStyles.MAIN_COLUMN)
 
+        page.controls.clear()
         page.add(main_column)
         self.monitor.get_metrics()
         self.logger.info("App started")
