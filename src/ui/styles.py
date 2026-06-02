@@ -32,10 +32,15 @@ class AppStyles:
         "shift_enter": True,
     }
     SEND_BUTTON = {
-        "text": "Отправка",
-        "icon": ft.Icons.SEND,
+        "content": ft.Row(
+            [
+                ft.Icon(ft.Icons.SEND, color=ft.Colors.WHITE),
+                ft.Text("Отправка", color=ft.Colors.WHITE),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        ),
         "style": ft.ButtonStyle(
-            color=ft.Colors.WHITE,
             bgcolor=ft.Colors.BLUE_700,
             padding=10,
         ),
@@ -44,10 +49,15 @@ class AppStyles:
         "width": 130,
     }
     SAVE_BUTTON = {
-        "text": "Сохранить",
-        "icon": ft.Icons.SAVE,
+        "content": ft.Row(
+            [
+                ft.Icon(ft.Icons.SAVE, color=ft.Colors.WHITE),
+                ft.Text("Сохранить", color=ft.Colors.WHITE),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        ),
         "style": ft.ButtonStyle(
-            color=ft.Colors.WHITE,
             bgcolor=ft.Colors.BLUE_700,
             padding=10,
         ),
@@ -56,10 +66,15 @@ class AppStyles:
         "height": 40,
     }
     CLEAR_BUTTON = {
-        "text": "Очистить",
-        "icon": ft.Icons.DELETE,
+        "content": ft.Row(
+            [
+                ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE),
+                ft.Text("Очистить", color=ft.Colors.WHITE),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        ),
         "style": ft.ButtonStyle(
-            color=ft.Colors.WHITE,
             bgcolor=ft.Colors.RED_700,
             padding=10,
         ),
@@ -68,10 +83,15 @@ class AppStyles:
         "height": 40,
     }
     ANALYTICS_BUTTON = {
-        "text": "Аналитика",
-        "icon": ft.Icons.ANALYTICS,
+        "content": ft.Row(
+            [
+                ft.Icon(ft.Icons.ANALYTICS, color=ft.Colors.WHITE),
+                ft.Text("Аналитика", color=ft.Colors.WHITE),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        ),
         "style": ft.ButtonStyle(
-            color=ft.Colors.WHITE,
             bgcolor=ft.Colors.GREEN_700,
             padding=10,
         ),
