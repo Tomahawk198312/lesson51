@@ -36,7 +36,7 @@ class ChatApp:
 
     def main(self, page: ft.Page):
         self.page = page
-        # Попытка сразу что-то показать
+        # Диагностика (можно убрать, но оставим для надёжности)
         page.title = "Загрузка..."
         try:
             page.add(ft.Text("Инициализация...", color=ft.Colors.WHITE))
@@ -50,15 +50,17 @@ class ChatApp:
             page.title = "Нет ключа"
             return
 
-        # Пропускаем set_window_size
-        # Просто применяем фон и тему
-        page.bgcolor = ft.Colors.GREY_900
-        page.theme_mode = ft.ThemeMode.DARK
-        page.padding = 20
+        # Применяем стили, кроме set_window_size (уже безопасен)
+        try:
+            AppStyles.set_window_size(page)
+        except:
+            pass
+        page.bgcolor = AppStyles.PAGE_SETTINGS["bgcolor"]
+        page.theme_mode = AppStyles.PAGE_SETTINGS["theme_mode"]
+        page.padding = AppStyles.PAGE_SETTINGS["padding"]
         page.update()
-        page.title = "Стили ОК"
 
-        # Инициализация кэша (с ловлей ошибок)
+        # Инициализация кэша
         try:
             app_dir = os.path.dirname(os.path.abspath(__file__))
             cache_db_path = os.path.join(app_dir, "chat_cache.db")
@@ -70,31 +72,29 @@ class ChatApp:
             page.title = f"Ошибка кэша: {e}"
             return
 
-        page.title = "Кэш ОК"
         # API
         try:
             self.api_client = OpenRouterClient()
         except Exception as e:
             page.title = f"API ошибка: {e}"
             return
-        page.title = "API ОК"
 
         # Модели
         try:
             models = self.api_client.available_models
+            if not models:
+                raise ValueError("Нет моделей")
         except Exception as e:
             page.title = f"Модели ошибка: {e}"
             return
-        page.title = f"Модели: {len(models)}"
 
         # Баланс
         try:
             self.update_balance()
         except:
             pass
-        page.title = "Баланс ОК"
 
-        # Построение UI (обернём каждый шаг)
+        # Построение UI
         try:
             self.model_dropdown = ModelSelector(models)
         except Exception as e:
@@ -133,22 +133,25 @@ class ChatApp:
             page.title = f"Кнопки: {e}"
             return
 
-        # Сборка макета
+        # Сборка макета (теперь без фиксированных ширин)
         try:
             input_row = ft.Row([self.message_input, send_button], **AppStyles.INPUT_ROW)
             control_buttons = ft.Row([save_button, analytics_button, clear_button], **AppStyles.CONTROL_BUTTONS_ROW)
             controls_column = ft.Column([input_row, control_buttons], **AppStyles.CONTROLS_COLUMN)
+
             balance_container = ft.Container(content=self.balance_text, **AppStyles.BALANCE_CONTAINER)
             model_selection = ft.Column([
                 self.model_dropdown.search_field,
                 self.model_dropdown,
                 balance_container
             ], **AppStyles.MODEL_SELECTION_COLUMN)
+
             main_column = ft.Column([
                 model_selection,
                 self.chat_history,
                 controls_column
             ], **AppStyles.MAIN_COLUMN)
+
             page.controls.clear()
             page.add(main_column)
             self.monitor.get_metrics()
