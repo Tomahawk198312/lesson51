@@ -35,107 +35,69 @@ class ChatApp:
         self.exports_dir = None
 
     def main(self, page: ft.Page):
-
-        # Диагностика
-        page.add(ft.Text("Приложение запущено", color=ft.Colors.WHITE))
-        page.update()
-
-        # 1. Загрузка конфигурации
-        try:
-            api_key = os.getenv("OPENROUTER_API_KEY")
-            if not api_key:
-                raise ValueError("API ключ не найден в .env")
-            page.controls.append(ft.Text(f"Ключ загружен: {api_key[:8]}...", color=ft.Colors.GREEN))
-        except Exception as e:
-            page.controls.append(ft.Text(f"Ошибка загрузки конфигурации: {e}", color=ft.Colors.RED))
+        # Проверка API ключа
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            show_error_snack(page, "API ключ не найден")
+            page.add(ft.Text("Ошибка: API ключ не найден", color=ft.Colors.RED))
             page.update()
             return
-
-        # 2. Создание директорий и кэша
-        try:
-            app_dir = os.path.dirname(os.path.abspath(__file__))
-            if not app_dir:
-                app_dir = os.getcwd()
-            cache_db_path = os.path.join(app_dir, "chat_cache.db")
-            self.cache = ChatCache(db_path=cache_db_path)
-            self.exports_dir = os.path.join(app_dir, "exports")
-            os.makedirs(self.exports_dir, exist_ok=True)
-            page.controls.append(ft.Text("Кэш создан", color=ft.Colors.GREEN))
-        except Exception as e:
-            page.controls.append(ft.Text(f"Ошибка создания кэша: {e}", color=ft.Colors.RED))
-            page.update()
-            return
-
-        # 3. Инициализация API клиента
-        try:
-            self.api_client = OpenRouterClient()
-            page.controls.append(ft.Text("API клиент создан", color=ft.Colors.GREEN))
-        except Exception as e:
-            page.controls.append(ft.Text(f"Ошибка API клиента: {e}", color=ft.Colors.RED))
-            page.update()
-            return
-
-        # 4. Получение списка моделей
-        try:
-            models = self.api_client.available_models
-            if not models:
-                raise ValueError("Список моделей пуст")
-            page.controls.append(ft.Text(f"Загружено {len(models)} моделей", color=ft.Colors.GREEN))
-        except Exception as e:
-            page.controls.append(ft.Text(f"Ошибка получения моделей: {e}", color=ft.Colors.RED))
-            page.update()
-            return
-
-        # 5. Обновление баланса
-        try:
-            self.update_balance()
-            page.controls.append(ft.Text(f"Баланс: {self.balance_text.value}", color=ft.Colors.GREEN))
-        except Exception as e:
-            page.controls.append(ft.Text(f"Ошибка получения баланса: {e}", color=ft.Colors.RED))
-            # не фатально, продолжаем
-
-        page.update()
 
         # Настройка страницы
         for key, value in AppStyles.PAGE_SETTINGS.items():
             setattr(page, key, value)
         AppStyles.set_window_size(page)
 
-        # Инициализация хранилища
+        # Определение рабочей директории и инициализация кэша
         app_dir = os.path.dirname(os.path.abspath(__file__))
         if not app_dir:
-            app_dir = os.getcwd()  # fallback для локального запуска
+            app_dir = os.getcwd()
         cache_db_path = os.path.join(app_dir, "chat_cache.db")
         self.exports_dir = os.path.join(app_dir, "exports")
         os.makedirs(self.exports_dir, exist_ok=True)
 
-        # Инициализация компонентов
-        self.cache = ChatCache(db_path=cache_db_path)
-        self.analytics = Analytics(self.cache)
         try:
-            self.api_client = OpenRouterClient()
-        except ValueError as e:
-            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED, size=20))
+            self.cache = ChatCache(db_path=cache_db_path)
+            self.analytics = Analytics(self.cache)
+        except Exception as e:
+            show_error_snack(page, f"Ошибка создания кэша: {e}")
+            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED))
             page.update()
             return
 
-        # Обновление баланса
-        self.update_balance()
+        # Инициализация API клиента
+        try:
+            self.api_client = OpenRouterClient()
+        except ValueError as e:
+            show_error_snack(page, str(e))
+            page.add(ft.Text(f"Ошибка API: {e}", color=ft.Colors.RED))
+            page.update()
+            return
 
-        # UI: список моделей
-        models = self.api_client.available_models
+        # Получение списка моделей
+        try:
+            models = self.api_client.available_models
+            if not models:
+                raise ValueError("Нет доступных моделей")
+        except Exception as e:
+            show_error_snack(page, f"Ошибка получения моделей: {e}")
+            page.add(ft.Text(f"Ошибка: {e}", color=ft.Colors.RED))
+            page.update()
+            return
+
+        # Обновление баланса (не критично при ошибке)
+        try:
+            self.update_balance()
+        except Exception:
+            pass
+
+        # Построение UI
         self.model_dropdown = ModelSelector(models)
-
-        # История чата
         self.chat_history = ft.ListView(**AppStyles.CHAT_HISTORY)
-
-        # Загрузка предыдущих сообщений
         self.load_chat_history()
 
-        # Поле ввода
         self.message_input = ft.TextField(**AppStyles.MESSAGE_INPUT)
 
-        # Кнопки
         send_button = ft.ElevatedButton(
             on_click=self.send_message_click,
             **AppStyles.SEND_BUTTON
@@ -173,6 +135,7 @@ class ChatApp:
         page.add(main_column)
         self.monitor.get_metrics()
         self.logger.info("App started")
+        page.update()
 
     def load_chat_history(self):
         try:
@@ -187,10 +150,10 @@ class ChatApp:
     def update_balance(self):
         try:
             balance = self.api_client.get_balance()
-            self.balance_text.value = f"Баланс: {balance}"
+            self.balance_text.value = balance
             self.balance_text.color = ft.Colors.GREEN_400
         except Exception as e:
-            self.balance_text.value = "Баланс: н/д"
+            self.balance_text.value = "н/д"
             self.balance_text.color = ft.Colors.RED_400
             self.logger.error(f"Balance error: {e}")
 
@@ -320,6 +283,4 @@ class ChatApp:
 
 def main(page: ft.Page):
     app = ChatApp()
-    # Передаём page в main
-    import asyncio
     asyncio.ensure_future(app.main(page))
