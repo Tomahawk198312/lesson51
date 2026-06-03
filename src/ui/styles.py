@@ -5,7 +5,7 @@ class AppStyles:
         "title": "AI Chat",
         "vertical_alignment": ft.MainAxisAlignment.START,
         "horizontal_alignment": ft.CrossAxisAlignment.CENTER,
-        "padding": 10,
+        "padding": ft.padding.only(top=32, left=10, right=10, bottom=10),
         "bgcolor": ft.Colors.GREY_900,
         "theme_mode": ft.ThemeMode.DARK,
     }
@@ -17,64 +17,64 @@ class AppStyles:
     }
     MESSAGE_INPUT = {
         "expand": True,
-        "height": 50,
+        "height": 56,
         "multiline": False,
         "text_size": 16,
         "color": ft.Colors.WHITE,
         "bgcolor": ft.Colors.GREY_800,
         "border_color": ft.Colors.BLUE_400,
         "cursor_color": ft.Colors.WHITE,
-        "content_padding": 10,
+        "content_padding": ft.padding.symmetric(horizontal=12, vertical=14),
         "border_radius": 8,
         "hint_text": "Введите сообщение здесь...",
         "shift_enter": True,
     }
     SEND_BUTTON = {
         "content": ft.Row([
-            ft.Icon(ft.Icons.SEND, color=ft.Colors.WHITE),
+            ft.Icon(ft.Icons.SEND, color=ft.Colors.WHITE, size=18),
             ft.Text("Отпр.", color=ft.Colors.WHITE, size=14),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
-        "style": ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, padding=8),
+        "style": ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, padding=10),
         "tooltip": "Отправить сообщение",
-        "height": 44,
+        "height": 48,
         "width": 82,
     }
     SAVE_BUTTON = {
         "content": ft.Row([
-            ft.Icon(ft.Icons.SAVE, color=ft.Colors.WHITE, size=18),
+            ft.Icon(ft.Icons.SAVE, color=ft.Colors.WHITE, size=16),
             ft.Text("Сохранить", color=ft.Colors.WHITE, size=13),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, padding=8),
         "tooltip": "Сохранить диалог в файл",
-        "width": 100,
-        "height": 40,
+        "width": 110,
+        "height": 42,
     }
     CLEAR_BUTTON = {
         "content": ft.Row([
-            ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE, size=18),
+            ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE, size=16),
             ft.Text("Очистить", color=ft.Colors.WHITE, size=13),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.RED_700, padding=8),
         "tooltip": "Очистить историю чата",
-        "width": 100,
-        "height": 40,
+        "width": 110,
+        "height": 42,
     }
     ANALYTICS_BUTTON = {
         "content": ft.Row([
-            ft.Icon(ft.Icons.ANALYTICS, color=ft.Colors.WHITE, size=18),
+            ft.Icon(ft.Icons.ANALYTICS, color=ft.Colors.WHITE, size=16),
             ft.Text("Аналитика", color=ft.Colors.WHITE, size=13),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, padding=8),
         "tooltip": "Показать аналитику",
-        "width": 100,
-        "height": 40,
+        "width": 110,
+        "height": 42,
     }
     INPUT_ROW = {
         "spacing": 8,
         "alignment": ft.MainAxisAlignment.CENTER,
     }
     CONTROL_BUTTONS_ROW = {
-        "spacing": 8,
+        "spacing": 10,
         "alignment": ft.MainAxisAlignment.CENTER,
         "wrap": True,
     }
