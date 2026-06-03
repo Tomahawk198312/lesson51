@@ -5,7 +5,8 @@ class AppStyles:
         "title": "AI Chat",
         "vertical_alignment": ft.MainAxisAlignment.START,
         "horizontal_alignment": ft.CrossAxisAlignment.CENTER,
-        "padding": ft.padding.only(top=32, left=10, right=10, bottom=10),
+        # Отступ сверху 32px, чтобы не заезжать под системные значки
+        "padding": ft.padding.Padding(top=32, left=10, right=10, bottom=10),
         "bgcolor": ft.Colors.GREY_900,
         "theme_mode": ft.ThemeMode.DARK,
     }
@@ -24,7 +25,7 @@ class AppStyles:
         "bgcolor": ft.Colors.GREY_800,
         "border_color": ft.Colors.BLUE_400,
         "cursor_color": ft.Colors.WHITE,
-        "content_padding": ft.padding.symmetric(horizontal=12, vertical=14),
+        "content_padding": 14,          # отступы внутри поля, число подходит
         "border_radius": 8,
         "hint_text": "Введите сообщение здесь...",
         "shift_enter": True,
