@@ -18,10 +18,9 @@ class AppStyles:
     }
     MESSAGE_INPUT = {
         "expand": True,
-        "height": 56,
+        "height": 112,
         "multiline": True,
-        "min_line": 2,
-        "max_line": 6,
+        "min_lines": 5,
         "text_size": 12,
         "color": ft.Colors.WHITE,
         "bgcolor": ft.Colors.GREY_800,
@@ -45,30 +44,37 @@ class AppStyles:
     SAVE_BUTTON = {
         "content": ft.Row([
             ft.Icon(ft.Icons.SAVE, color=ft.Colors.WHITE, size=16),
-            ft.Text("Сохранить", color=ft.Colors.WHITE, size=8),
+            ft.Text("Сохранить", color=ft.Colors.WHITE, size=12),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, padding=8),
         "tooltip": "Сохранить диалог в файл",
+        "width": 110,
+        "height": 42,
     }
     CLEAR_BUTTON = {
         "content": ft.Row([
             ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE, size=16),
-            ft.Text("Очистить", color=ft.Colors.WHITE, size=8),
+            ft.Text("Очистить", color=ft.Colors.WHITE, size=12),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.RED_700, padding=8),
         "tooltip": "Очистить историю чата",
+        "width": 110,
+        "height": 42,
     }
     ANALYTICS_BUTTON = {
         "content": ft.Row([
             ft.Icon(ft.Icons.ANALYTICS, color=ft.Colors.WHITE, size=16),
-            ft.Text("Аналитика", color=ft.Colors.WHITE, size=8),
+            ft.Text("Аналитика", color=ft.Colors.WHITE, size=10),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=4),
         "style": ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, padding=8),
         "tooltip": "Показать аналитику",
+        "width": 110,
+        "height": 42,
     }
     INPUT_ROW = {
         "spacing": 8,
         "alignment": ft.MainAxisAlignment.CENTER,
+        "vertical_alignment": ft.CrossAxisAlignment.CENTER,
     }
     CONTROL_BUTTONS_ROW = {
         "spacing": 10,
